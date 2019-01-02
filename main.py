@@ -11,8 +11,10 @@ secondstrywificonnect = 20
 totblinks = 0
 # GPIO 5 is Pin D1 on NodeMCU
 pinwithIRsensor = 5
-wifiname = 'xxx'
-wifipass = 'yyy'
+wifiname = '1'
+wifipass = '2'
+serveraddress = 'myserver.de'
+passforsending = '3'
 messA = 0
 messB = 0
 
@@ -24,10 +26,12 @@ if debug:
     print(str(time.ticks_ms()) + ': pinwithIRsensor: ' + str(pinwithIRsensor))
     print(str(time.ticks_ms()) + ': wifiname: ' + str(wifiname))
     print(str(time.ticks_ms()) + ': wifipass: ' + str(wifipass))
+    print(str(time.ticks_ms()) + ': serveraddress: ' + str(serveraddress))
+    print(str(time.ticks_ms()) + ': passforsending: ' + str(passforsending))
 
 # This function will send our Data to the Internet
 def senddata(timer):
-    # Any exception will reset us
+    # Any exception will return
     try:
         global messA
         global messB
@@ -87,15 +91,15 @@ def senddata(timer):
                         print(str(time.ticks_ms()) + ': Connect failed after ' + str(connectcount) + ' seconds sleep. Giving up.')
                     return
         # Send data to the Internet, a Post Request with http - we don't use SSL here!
-        content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=zzz'
+        content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=' + passforsending
         if debug:
             print(str(time.ticks_ms()) + ': Connecting to website')
-        addr_info = usocket.getaddrinfo("myservr.de", 80)
+        addr_info = usocket.getaddrinfo(serveraddress, 80)
         addr = addr_info[0][-1]
         sock = usocket.socket()
         sock.connect(addr)
         sock.send(b'POST /tempsensor.php HTTP/1.1\r\n')
-        sock.send(b'Host: myserver.de\r\n')
+        sock.send(b'Host: ' + serveraddress + b'\r\n')
         sock.send(b'Content-Type: application/x-www-form-urlencoded\r\n')
         sock.send(b'Content-Length: ' + str(len(content)) + '\r\n')
         sock.send(b'\r\n')
@@ -110,12 +114,12 @@ def senddata(timer):
         messB = 0
     except:
         if debug:
-            print(str(time.ticks_ms()) + ': Exception happend. RESTART')
-        machine.reset()
+            print(str(time.ticks_ms()) + ': Exception in senddata() happend. Returning')
+        return
 
 # This function is called everytime we get a pulse
 def blinkarrived(pin):
-    # Any exception will reset us
+    # Any exception will return
     try:
         global messA
         global messB
@@ -139,8 +143,8 @@ def blinkarrived(pin):
             return
     except:
         if debug:
-            print(str(time.ticks_ms()) + ': Exception happend. RESTART')
-        machine.reset()
+            print(str(time.ticks_ms()) + ': Exception in blinkarrived() happend. Returning')
+        return
 
 # Any exception will reset us
 try:
@@ -150,9 +154,11 @@ try:
     tim = machine.Timer(-1)
     tim.init(period = sendseconds * 1000, mode = machine.Timer.PERIODIC, callback = senddata)
     # Activate a callback everytime we get a blink
+    if debug:
+        print(str(time.ticks_ms()) + ': Activating Interrupt')
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN, machine.Pin.PULL_UP)
     irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived)
 except:
     if debug:
-        print(str(time.ticks_ms()) + ': Exception happend. RESTART')
+        print(str(time.ticks_ms()) + ': Exception in main() happend. RESTART')
     machine.reset()
