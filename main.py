@@ -148,6 +148,10 @@ def blinkarrived(pin):
 
 # Any exception will reset us
 try:
+    # Clock at 160 MHz instead of 80 MHz:
+    machine.freq(160000000)
+    if debug:
+        print(str(time.ticks_ms()) + ': Frequency is: ' + str(machine.freq()) + ' Hz')
     # Activate a timer which will send our last sample every sendseconds Seconds
     if debug:
         print(str(time.ticks_ms()) + ': Activating Timer')
