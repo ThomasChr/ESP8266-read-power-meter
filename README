@@ -8,3 +8,4 @@ main.py: The Micropython Sourcecode for the ESP8266
 README: This file
 tempsensor.php: The backend PHP-Script to insert the data
 
+PS: We're assuming a price of 27.88 Euro-Cent per kWh in the Grafana Querys.
