@@ -1,0 +1,49 @@
+Power Metric A:
+>>>>>
+SELECT
+  UNIX_TIMESTAMP(timestamp) as time_sec,
+  power as value,
+  'Power' as metric
+FROM sensorvalues
+WHERE $__timeFilter(timestamp)
+AND sensorid = 5
+ORDER BY timestamp ASC
+<<<<<
+
+Power Metric B:
+>>>>>
+SELECT
+  UNIX_TIMESTAMP(timestamp) as time_sec,
+  (power / 1000) * 27.88 as value,
+  'cost in cent/hour' as metric
+FROM sensorvalues
+WHERE $__timeFilter(timestamp)
+AND sensorid = 5
+ORDER BY timestamp ASC
+<<<<<
+
+Consumption per Month Metric A:
+>>>>>
+select
+  timestamp as time,
+  sum(kwh_since_last_send) as value,
+  'kwh used' as metric
+from sensorvalues
+where timestamp >= $__timeFrom()
+and sensorid = 5
+group by year(timestamp), month(timestamp)
+order by id asc
+<<<<<
+
+Consumption per Month Metric B:
+>>>>>
+select
+  timestamp as time,
+  (sum(kwh_since_last_send) * 0.2788) as value,
+  'cost in eur' as metric
+from sensorvalues
+where timestamp >= $__timeFrom()
+and sensorid = 5
+group by year(timestamp), month(timestamp)
+order by id asc
+<<<<<

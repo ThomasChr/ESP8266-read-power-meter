@@ -1,0 +1,10 @@
+Code to read a Power Meter over it's S0-Interface and stream ist on your own Server.
+It's possible to use Grafana to display the values in a nice manner.
+
+There are the following files:
+database.sql: The database Structure for the backend
+grafana.txt: Textfile with the Grafana Querys
+main.py: The Micropython Sourcecode for the ESP8266
+README: This file
+tempsensor.php: The backend PHP-Script to insert the data
+
