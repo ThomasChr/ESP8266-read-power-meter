@@ -23,7 +23,7 @@ if debug:
     print(str(time.ticks_ms()) + ': secondstrywificonnect: ' + str(secondstrywificonnect))
     print(str(time.ticks_ms()) + ': pinwithIRsensor: ' + str(pinwithIRsensor))
     print(str(time.ticks_ms()) + ': wifiname: ' + str(wifiname))
-    print(str(time.ticks_ms()) + ': pinwithIRsensor: ' + str(wifipass))
+    print(str(time.ticks_ms()) + ': wifipass: ' + str(wifipass))
 
 # This function will send our Data to the Internet
 def senddata(timer):
