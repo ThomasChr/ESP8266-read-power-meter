@@ -15,6 +15,7 @@ wifiname = '1'
 wifipass = '2'
 serveraddress = 'myserver.de'
 passforsending = '3'
+impulses_per_kwh = 10000
 messA = 0
 messB = 0
 
@@ -28,6 +29,7 @@ if debug:
     print(str(time.ticks_ms()) + ': wifipass: ' + str(wifipass))
     print(str(time.ticks_ms()) + ': serveraddress: ' + str(serveraddress))
     print(str(time.ticks_ms()) + ': passforsending: ' + str(passforsending))
+    print(str(time.ticks_ms()) + ': impulses_per_kwh: ' + str(impulses_per_kwh))
 
 # This function will send our Data to the Internet
 def senddata(timer):
@@ -61,9 +63,9 @@ def senddata(timer):
             timebetweenpulses = messA - messB
         else:
             timebetweenpulses = messB - messA
-        watt = 360000 / timebetweenpulses
+        watt = (36 * impulses_per_kwh) / timebetweenpulses
         if totblinks > 0:
-            kwh_since_start = totblinks / 10000
+            kwh_since_start = totblinks / impulses_per_kwh
         else:
             kwh_since_start = 0
         if debug:
@@ -148,10 +150,6 @@ def blinkarrived(pin):
 
 # Any exception will reset us
 try:
-    # Clock at 160 MHz instead of 80 MHz:
-    machine.freq(160000000)
-    if debug:
-        print(str(time.ticks_ms()) + ': Frequency is: ' + str(machine.freq()) + ' Hz')
     # Activate a timer which will send our last sample every sendseconds Seconds
     if debug:
         print(str(time.ticks_ms()) + ': Activating Timer')
