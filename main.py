@@ -150,6 +150,10 @@ def blinkarrived(pin):
 
 # Any exception will reset us
 try:
+    # Clock at 160 MHz instead of 80 MHz:
+    machine.freq(160000000)
+    if debug:
+        print(str(time.ticks_ms()) + ': Frequency is: ' + str(machine.freq()) + ' Hz')
     # Activate a timer which will send our last sample every sendseconds Seconds
     if debug:
         print(str(time.ticks_ms()) + ': Activating Timer')
@@ -158,7 +162,7 @@ try:
     # Activate a callback everytime we get a blink
     if debug:
         print(str(time.ticks_ms()) + ': Activating Interrupt')
-    irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN, machine.Pin.PULL_UP)
+    irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
     irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived)
 except:
     if debug:
