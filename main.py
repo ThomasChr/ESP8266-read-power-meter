@@ -216,9 +216,9 @@ try:
     # Activate a callback everytime we get a blink
     if debug:
         print(str(time.ticks_ms()) + ': Activating Interrupt')
-    # We're using a hard Interrupt to be as fast as possible (Interrupts on ESP8266 are neither fast nor accurate, but good enough for our purpose)
+    # We're using a Pin Change Interrupt, a soft one. A hard one is not allowed to make ANY memory allocation. Simple print() is not possible...
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
-    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
+    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived)
 except Exception as e:
     if debug:
         print(str(time.ticks_ms()) + ': Exception in main() happend. RESTART')
