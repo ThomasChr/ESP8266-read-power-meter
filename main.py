@@ -1,13 +1,17 @@
+import os
 import sys
 import time
 import machine
 import network
 import usocket
+import ubinascii
 
 # Should we output debug messages over serial?
 debug = 0
 # Should we write a file called except.log everytime there is an exception?
 exceptionlog = 1
+# Should we send the file to our server as BASE64 exceptiondata?
+sendexception = 1
 # What is our sensorid?
 sensorid = 5
 # How many seconds between sending data?
@@ -92,7 +96,15 @@ def senddata(timer):
                         print(str(time.ticks_ms()) + ': Connect failed after ' + str(connectcount) + ' seconds sleep. Giving up.')
                     return
         # Send data to the Internet, a Post Request with http - we don't use SSL here!
-        content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=' + passforsending
+        if sendexception and 'except.log' in os.listdir():
+            f = open('except.log', 'r')
+            exceptiondata = f.read()
+            exceptiondata = ubinascii.b2a_base64(exceptiondata)
+            f.close()
+            os.remove('except.log')
+            content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&exceptiondata=' + exceptiondata + '&password=' + passforsending
+        else:
+            content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=' + passforsending
         if debug:
             print(str(time.ticks_ms()) + ': Connecting to website')
         addr_info = usocket.getaddrinfo(serveraddress, 80)
@@ -122,6 +134,8 @@ def senddata(timer):
             f.write('\n***** ' + str(time.ticks_ms()) + ' senddata() ***** ')
             sys.print_exception(e, f)
             f.close()
+            if debug:
+                print(str(time.ticks_ms()) + ': File except.log written')
         return
 
 # This function is called everytime we get a pulse
@@ -157,6 +171,8 @@ def blinkarrived(pin):
             f.write('\n***** ' + str(time.ticks_ms()) + ' blinkarrived() ***** ')
             sys.print_exception(e, f)
             f.close()
+            if debug:
+                print(str(time.ticks_ms()) + ': File except.log written')
         return
 
 # And now we are in main!
@@ -174,6 +190,24 @@ try:
         print(str(time.ticks_ms()) + ': passforsending: ' + str(passforsending))
         print(str(time.ticks_ms()) + ': impulses_per_kwh: ' + str(impulses_per_kwh))
         print(str(time.ticks_ms()) + ': Frequency is: ' + str(machine.freq()) + ' Hz')
+    # Write the reset reason and startup config in except.log
+    if exceptionlog:
+        f = open('except.log', 'a')
+        f.seek(0, 2)
+        f.write('\n***** ' + str(time.ticks_ms()) + ' *****STARTUP***** ')
+        f.write('\nReset reason: ' + str(machine.reset_cause()))
+        f.write('\nsensorid: ' + str(sensorid))
+        f.write('\nsendseconds: ' + str(sendseconds))
+        f.write('\nsecondstrywificonnect: ' + str(secondstrywificonnect))
+        f.write('\npinwithIRsensor: ' + str(pinwithIRsensor))
+        f.write('\nwifiname: ' + str(wifiname))
+        f.write('\nwifipass: ' + str(wifipass))
+        f.write('\nserveraddress: ' + str(serveraddress))
+        f.write('\npassforsending: ' + str(passforsending))
+        f.write('\nimpulses_per_kwh: ' + str(impulses_per_kwh))
+        f.write('\nFrequency is: ' + str(machine.freq()) + ' Hz')
+        f.write('\n\n\n')
+        f.close()
     # Activate a timer which will send our last sample every sendseconds Seconds
     if debug:
         print(str(time.ticks_ms()) + ': Activating Timer')
@@ -194,4 +228,6 @@ except Exception as e:
         f.write('\n***** ' + str(time.ticks_ms()) + ' main() ***** ')
         sys.print_exception(e, f)
         f.close()
+        if debug:
+            print(str(time.ticks_ms()) + ': File except.log written')
     machine.reset()
