@@ -1,9 +1,9 @@
 <?php
 
-$sensorpass = "zzz";
+$sensorpass = "3";
 $dbserver = "localhost";
 $dbuser = "envsensors";
-$dbpass = "uuu";
+$dbpass = "4";
 $dbname = "envsensors";
 
 $sensorid = $_POST["sensorid"];
@@ -41,6 +41,11 @@ if (!isset($kwh_since_start) || !is_numeric($kwh_since_start)) {
     $kwh_since_start = 0;
 }
 
+$exceptiondata = $_POST["exceptiondata"];
+if (!isset($exceptiondata)) {
+    $exceptiondata = "";
+}
+
 $conn = new mysqli($dbserver, $dbuser, $dbpass, $dbname);
 if ($conn->connect_error) {
     die("Error 3");
@@ -56,8 +61,8 @@ if ($lastkwhresult->num_rows == 1) {
     $kwh_since_last_send = 0;
 }
 
-$stmt = $conn->prepare("INSERT INTO sensorvalues (sensorid, temp, press, hum, power, kwh_since_start, kwh_since_last_send) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("idddddd", $sensorid, $temp, $press, $hum, $power, $kwh_since_start, $kwh_since_last_send);
+$stmt = $conn->prepare("INSERT INTO sensorvalues (sensorid, temp, press, hum, power, kwh_since_start, kwh_since_last_send, exceptiondata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("idddddds", $sensorid, $temp, $press, $hum, $power, $kwh_since_start, $kwh_since_last_send, $exceptiondata);
 $stmt->execute();
 
 echo "Done.";
