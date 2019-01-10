@@ -1,35 +1,34 @@
+import sys
 import time
 import machine
 import network
 import usocket
 
-# Globals
+# Should we output debug messages over serial?
 debug = 0
+# Should we write a file called except.log everytime there is an exception?
+exceptionlog = 1
+# What is our sensorid?
 sensorid = 5
+# How many seconds between sending data?
 sendseconds = 60
-secondstrywificonnect = 20
-totblinks = 0
+# How many seconds do we try until we abort connecting to our Wifi?
+secondstrywificonnect = 30
+# How many blinks does or power meter give per kWh
+impulses_per_kwh = 10000
 # GPIO 5 is Pin D1 on NodeMCU
 pinwithIRsensor = 5
+# Wifidata
 wifiname = '1'
 wifipass = '2'
+# Serverdata
 serveraddress = 'myserver.de'
 passforsending = '3'
-impulses_per_kwh = 10000
+# Blinks we've seen from our power meter since startup
+totblinks = 0
+# These are
 messA = 0
 messB = 0
-
-if debug:
-    print(str(time.ticks_ms()) + ': ***STARTUP***')
-    print(str(time.ticks_ms()) + ': sensorid: ' + str(sensorid))
-    print(str(time.ticks_ms()) + ': sendseconds: ' + str(sendseconds))
-    print(str(time.ticks_ms()) + ': secondstrywificonnect: ' + str(secondstrywificonnect))
-    print(str(time.ticks_ms()) + ': pinwithIRsensor: ' + str(pinwithIRsensor))
-    print(str(time.ticks_ms()) + ': wifiname: ' + str(wifiname))
-    print(str(time.ticks_ms()) + ': wifipass: ' + str(wifipass))
-    print(str(time.ticks_ms()) + ': serveraddress: ' + str(serveraddress))
-    print(str(time.ticks_ms()) + ': passforsending: ' + str(passforsending))
-    print(str(time.ticks_ms()) + ': impulses_per_kwh: ' + str(impulses_per_kwh))
 
 # This function will send our Data to the Internet
 def senddata(timer):
@@ -114,9 +113,15 @@ def senddata(timer):
         sock.close()
         messA = 0
         messB = 0
-    except:
+    except Exception as e:
         if debug:
             print(str(time.ticks_ms()) + ': Exception in senddata() happend. Returning')
+        if exceptionlog:
+            f = open('except.log', 'a')
+            f.seek(0, 2)
+            f.write('\n***** ' + str(time.ticks_ms()) + ' senddata() ***** ')
+            sys.print_exception(e, f)
+            f.close()
         return
 
 # This function is called everytime we get a pulse
@@ -143,14 +148,31 @@ def blinkarrived(pin):
             if debug:
                 print(str(time.ticks_ms()) + ': Setting messA to: ' + str(akttime))
             return
-    except:
+    except Exception as e:
         if debug:
             print(str(time.ticks_ms()) + ': Exception in blinkarrived() happend. Returning')
+        if exceptionlog:
+            f = open('except.log', 'a')
+            f.seek(0, 2)
+            f.write('\n***** ' + str(time.ticks_ms()) + ' blinkarrived() ***** ')
+            sys.print_exception(e, f)
+            f.close()
         return
 
+# And now we are in main!
 # Any exception will reset us
 try:
     if debug:
+        print(str(time.ticks_ms()) + ': ***STARTUP***')
+        print(str(time.ticks_ms()) + ': sensorid: ' + str(sensorid))
+        print(str(time.ticks_ms()) + ': sendseconds: ' + str(sendseconds))
+        print(str(time.ticks_ms()) + ': secondstrywificonnect: ' + str(secondstrywificonnect))
+        print(str(time.ticks_ms()) + ': pinwithIRsensor: ' + str(pinwithIRsensor))
+        print(str(time.ticks_ms()) + ': wifiname: ' + str(wifiname))
+        print(str(time.ticks_ms()) + ': wifipass: ' + str(wifipass))
+        print(str(time.ticks_ms()) + ': serveraddress: ' + str(serveraddress))
+        print(str(time.ticks_ms()) + ': passforsending: ' + str(passforsending))
+        print(str(time.ticks_ms()) + ': impulses_per_kwh: ' + str(impulses_per_kwh))
         print(str(time.ticks_ms()) + ': Frequency is: ' + str(machine.freq()) + ' Hz')
     # Activate a timer which will send our last sample every sendseconds Seconds
     if debug:
@@ -160,9 +182,16 @@ try:
     # Activate a callback everytime we get a blink
     if debug:
         print(str(time.ticks_ms()) + ': Activating Interrupt')
+    # We're using a hard Interrupt to be as fast as possible (Interrupts on ESP8266 are neither fast nor accurate, but good enough for our purpose)
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
-    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived)
-except:
+    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
+except Exception as e:
     if debug:
         print(str(time.ticks_ms()) + ': Exception in main() happend. RESTART')
+    if exceptionlog:
+        f = open('except.log', 'a')
+        f.seek(0, 2)
+        f.write('\n***** ' + str(time.ticks_ms()) + ' main() ***** ')
+        sys.print_exception(e, f)
+        f.close()
     machine.reset()
