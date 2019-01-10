@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 02. Jan 2019 um 09:37
+-- Erstellungszeit: 10. Jan 2019 um 09:02
 -- Server-Version: 10.1.37-MariaDB-1~xenial
 -- PHP-Version: 7.0.32-0ubuntu0.16.04.1
 
@@ -88,7 +88,8 @@ CREATE TABLE `sensorvalues` (
   `hum` decimal(10,3) NOT NULL,
   `power` decimal(10,3) NOT NULL,
   `kwh_since_start` decimal(15,5) NOT NULL,
-  `kwh_since_last_send` decimal(10,5) NOT NULL
+  `kwh_since_last_send` decimal(10,5) NOT NULL,
+  `exceptiondata` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -122,7 +123,7 @@ ALTER TABLE `sensors`
 -- AUTO_INCREMENT für Tabelle `sensorvalues`
 --
 ALTER TABLE `sensorvalues`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=252529;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=310166;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
