@@ -2,7 +2,7 @@
 
 $dbserver = "localhost";
 $dbuser = "envsensors";
-$dbpass = "uuu";
+$dbpass = "4";
 $dbname = "envsensors";
 
 $conn = new mysqli($dbserver, $dbuser, $dbpass, $dbname);
