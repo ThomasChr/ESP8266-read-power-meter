@@ -38,6 +38,18 @@ messB = 0
 # Exception in an ISR should be handled, reserve memory for that
 micropython.alloc_emergency_exception_buf(100)
 
+# This function is called everytime we get a pulse (Pin Change Interrupt)
+def blinkarrived(pin):
+    global messA
+    global messB
+    global totblinks
+    totblinks = totblinks + 1
+    if messA > messB:
+        messB = time.ticks_ms()
+    else:
+        messA = time.ticks_ms()
+    return
+
 # This function will send our Data to the Internet
 def senddata(timer):
     # Any exception will return
@@ -141,18 +153,6 @@ def senddata(timer):
             if debug:
                 print(str(time.ticks_ms()) + ': File except.log written')
         return
-
-# This function is called everytime we get a pulse
-def blinkarrived(pin):
-    global messA
-    global messB
-    global totblinks
-    totblinks = totblinks + 1
-    if messA > messB:
-        messB = time.ticks_ms()
-    else:
-        messA = time.ticks_ms()
-    return
 
 # And now we are in main!
 # Any exception will reset us
