@@ -7,8 +7,6 @@ import usocket
 import ubinascii
 import micropython
 
-# Should we output debug messages over serial?
-debug = 0
 # Should we write a file called except.log everytime there is an exception?
 exceptionlog = 1
 # Should we send the file to our server as BASE64 exceptiondata?
@@ -19,7 +17,7 @@ sensorid = 5
 sendseconds = 60
 # How many seconds do we try until we abort connecting to our Wifi?
 secondstrywificonnect = 30
-# How many blinks does or power meter give per kWh
+# How many blinks does our power meter give per kWh
 impulses_per_kwh = 10000
 # GPIO 5 is Pin D1 on NodeMCU
 pinwithIRsensor = 5
@@ -31,7 +29,7 @@ serveraddress = 'myserver.de'
 passforsending = '3'
 # Blinks we've seen from our power meter since startup
 totblinks = 0
-# These are
+# We save our timestamp here to calculate the time between two blinks
 messA = 0
 messB = 0
 
@@ -57,40 +55,23 @@ def senddata(timer):
         global messA
         global messB
         global totblinks
-        if debug:
-            print(str(time.ticks_ms()) + ': ***senddata***')
-            print(str(time.ticks_ms()) + ': messA ' + str(messA))
-            print(str(time.ticks_ms()) + ': messB ' + str(messB))
-            print(str(time.ticks_ms()) + ': totblinks ' + str(totblinks))
         if messA == 0 or messB == 0:
-            if debug:
-                print(str(time.ticks_ms()) + ': messA or messB == 0 -> returning')
             return
+        # Check for overflow
         if abs(messA - messB) > 3600000:
-            if debug:
-                print(str(time.ticks_ms()) + ': Possible Overflow')
             if messA > messB:
-                if debug:
-                    print(str(time.ticks_ms()) + ': Setting messA to 0')
                 messA = 0
-            if messB > messA:
-                if debug:
-                    print(str(time.ticks_ms()) + ': Setting messA to 0')
+            else:
                 messB = 0
             return
         if messA > messB:
             timebetweenpulses = messA - messB
         else:
             timebetweenpulses = messB - messA
+        # Calculate Watts
         watt = (36 * impulses_per_kwh) / timebetweenpulses
-        if totblinks > 0:
-            kwh_since_start = totblinks / impulses_per_kwh
-        else:
-            kwh_since_start = 0
-        if debug:
-            print(str(time.ticks_ms()) + ': timebetweenpulses (ms) ' + str(timebetweenpulses))
-            print(str(time.ticks_ms()) + ': watt ' + str(watt))
-            print(str(time.ticks_ms()) + ': kwh_since_start ' + str(kwh_since_start))
+        # Calculate kWh since start
+        kwh_since_start = totblinks / impulses_per_kwh
         # Connect to WiFi -> Get interfaces
         sta_if = network.WLAN(network.STA_IF)
         ap_if = network.WLAN(network.AP_IF)
@@ -104,12 +85,8 @@ def senddata(timer):
             while not sta_if.isconnected():
                 connectcount = connectcount + 1
                 time.sleep(1)
-                if debug:
-                    print(str(time.ticks_ms()) + ': Connect try: ' + str(connectcount))
                 if connectcount > secondstrywificonnect:
-                    # We didn't connect after secondstrywificonnect seconds. Let's sleep
-                    if debug:
-                        print(str(time.ticks_ms()) + ': Connect failed after ' + str(connectcount) + ' seconds sleep. Giving up.')
+                    # We didn't connect after secondstrywificonnect seconds. Return for now
                     return
         # Send data to the Internet, a Post Request with http - we don't use SSL here!
         if sendexception and 'except.log' in os.listdir():
@@ -121,8 +98,6 @@ def senddata(timer):
             content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&exceptiondata=' + exceptiondata + '&password=' + passforsending
         else:
             content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=' + passforsending
-        if debug:
-            print(str(time.ticks_ms()) + ': Connecting to website')
         addr_info = usocket.getaddrinfo(serveraddress, 80)
         addr = addr_info[0][-1]
         sock = usocket.socket()
@@ -132,43 +107,25 @@ def senddata(timer):
         sock.send(b'Content-Type: application/x-www-form-urlencoded\r\n')
         sock.send(b'Content-Length: ' + str(len(content)) + '\r\n')
         sock.send(b'\r\n')
-        if debug:
-            print(str(time.ticks_ms()) + ': Sending: ' + str(content))
         sock.send(content)
         sock.send(b'\r\n\r\n')
-        if debug:
-            print(str(time.ticks_ms()) + ': Answer: ' + str(sock.recv(1000)))
         sock.close()
+        # Done
         messA = 0
         messB = 0
+        return
     except Exception as e:
-        if debug:
-            print(str(time.ticks_ms()) + ': Exception in senddata() happend. Returning')
         if exceptionlog:
             f = open('except.log', 'a')
             f.seek(0, 2)
             f.write('\n***** ' + str(time.ticks_ms()) + ' senddata() ***** ')
             sys.print_exception(e, f)
             f.close()
-            if debug:
-                print(str(time.ticks_ms()) + ': File except.log written')
         return
 
 # And now we are in main!
 # Any exception will reset us
 try:
-    if debug:
-        print(str(time.ticks_ms()) + ': ***STARTUP***')
-        print(str(time.ticks_ms()) + ': sensorid: ' + str(sensorid))
-        print(str(time.ticks_ms()) + ': sendseconds: ' + str(sendseconds))
-        print(str(time.ticks_ms()) + ': secondstrywificonnect: ' + str(secondstrywificonnect))
-        print(str(time.ticks_ms()) + ': pinwithIRsensor: ' + str(pinwithIRsensor))
-        print(str(time.ticks_ms()) + ': wifiname: ' + str(wifiname))
-        print(str(time.ticks_ms()) + ': wifipass: ' + str(wifipass))
-        print(str(time.ticks_ms()) + ': serveraddress: ' + str(serveraddress))
-        print(str(time.ticks_ms()) + ': passforsending: ' + str(passforsending))
-        print(str(time.ticks_ms()) + ': impulses_per_kwh: ' + str(impulses_per_kwh))
-        print(str(time.ticks_ms()) + ': Frequency is: ' + str(machine.freq()) + ' Hz')
     # Write the reset reason and startup config in except.log
     if exceptionlog:
         f = open('except.log', 'a')
@@ -188,25 +145,18 @@ try:
         f.write('\n\n\n')
         f.close()
     # Activate a timer which will send our last sample every sendseconds Seconds
-    if debug:
-        print(str(time.ticks_ms()) + ': Activating Timer')
     tim = machine.Timer(-1)
     tim.init(period = sendseconds * 1000, mode = machine.Timer.PERIODIC, callback = senddata)
     # Activate a callback everytime we get a blink
-    if debug:
-        print(str(time.ticks_ms()) + ': Activating Interrupt')
-    # We're using a Pin Change Interrupt, a hard one. To be as quick as possible. Beware: The ISR can't allocate any memory and should be as short as possible!
+    # We're using a Pin Change Interrupt, a hard one. To be as quick as possible.
+    # Beware: The ISR can't allocate any memory and should be as short as possible!
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
     irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
 except Exception as e:
-    if debug:
-        print(str(time.ticks_ms()) + ': Exception in main() happend. RESTART')
     if exceptionlog:
         f = open('except.log', 'a')
         f.seek(0, 2)
         f.write('\n***** ' + str(time.ticks_ms()) + ' main() ***** ')
         sys.print_exception(e, f)
         f.close()
-        if debug:
-            print(str(time.ticks_ms()) + ': File except.log written')
     machine.reset()
