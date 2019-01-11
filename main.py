@@ -5,6 +5,7 @@ import machine
 import network
 import usocket
 import ubinascii
+import micropython
 
 # Should we output debug messages over serial?
 debug = 0
@@ -33,6 +34,9 @@ totblinks = 0
 # These are
 messA = 0
 messB = 0
+
+# Exception in an ISR should be handled, reserve memory for that
+micropython.alloc_emergency_exception_buf(100)
 
 # This function will send our Data to the Internet
 def senddata(timer):
@@ -140,40 +144,15 @@ def senddata(timer):
 
 # This function is called everytime we get a pulse
 def blinkarrived(pin):
-    # Any exception will return
-    try:
-        global messA
-        global messB
-        global totblinks
-        if debug:
-            print(str(time.ticks_ms()) + ': ***blinkarrived***')
-            print(str(time.ticks_ms()) + ': messA ' + str(messA))
-            print(str(time.ticks_ms()) + ': messB ' + str(messB))
-            print(str(time.ticks_ms()) + ': totblinks ' + str(totblinks))
-        akttime = time.ticks_ms()
-        totblinks = totblinks + 1
-        if messA > messB:
-            messB = akttime
-            if debug:
-                print(str(time.ticks_ms()) + ': Setting messB to: ' + str(akttime))
-            return
-        else:
-            messA = akttime
-            if debug:
-                print(str(time.ticks_ms()) + ': Setting messA to: ' + str(akttime))
-            return
-    except Exception as e:
-        if debug:
-            print(str(time.ticks_ms()) + ': Exception in blinkarrived() happend. Returning')
-        if exceptionlog:
-            f = open('except.log', 'a')
-            f.seek(0, 2)
-            f.write('\n***** ' + str(time.ticks_ms()) + ' blinkarrived() ***** ')
-            sys.print_exception(e, f)
-            f.close()
-            if debug:
-                print(str(time.ticks_ms()) + ': File except.log written')
-        return
+    global messA
+    global messB
+    global totblinks
+    totblinks = totblinks + 1
+    if messA > messB:
+        messB = time.ticks_ms()
+    else:
+        messA = time.ticks_ms()
+    return
 
 # And now we are in main!
 # Any exception will reset us
@@ -216,9 +195,9 @@ try:
     # Activate a callback everytime we get a blink
     if debug:
         print(str(time.ticks_ms()) + ': Activating Interrupt')
-    # We're using a Pin Change Interrupt, a soft one. A hard one is not allowed to make ANY memory allocation. Simple print() is not possible...
+    # We're using a Pin Change Interrupt, a hard one. To be as quick as possible. Beware: The ISR can't allocate any memory and should be as short as possible!
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
-    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived)
+    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
 except Exception as e:
     if debug:
         print(str(time.ticks_ms()) + ': Exception in main() happend. RESTART')
