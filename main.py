@@ -101,6 +101,12 @@ def senddata(timer):
 # And now we are in main!
 # Any exception will reset us
 try:
+    # Configure WiFi
+    # Get interfaces
+    sta_if = network.WLAN(network.STA_IF)
+    ap_if = network.WLAN(network.AP_IF)
+    # Deactivate access point, we're station only
+    ap_if.active(False)
     # Activate a timer which will send our last sample every sendseconds Seconds
     tim = machine.Timer(-1)
     tim.init(period = sendseconds * 1000, mode = machine.Timer.PERIODIC, callback = senddata)
@@ -109,11 +115,5 @@ try:
     # Beware: The ISR can't allocate any memory and should be as short as possible!
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
     irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
-    # Configure WiFi
-    # Get interfaces
-    sta_if = network.WLAN(network.STA_IF)
-    ap_if = network.WLAN(network.AP_IF)
-    # Deactivate access point, we're station only
-    ap_if.active(False)
 except:
     machine.reset()
