@@ -91,7 +91,6 @@ def senddata(timer):
             sock.send(b'\r\n')
             sock.send(content)
             sock.send(b'\r\n\r\n')
-            sock.close()
         except:
             return
         finally:
