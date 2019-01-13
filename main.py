@@ -1,22 +1,15 @@
-import os
-import sys
 import time
 import machine
 import network
 import usocket
-import ubinascii
 import micropython
 
-# Should we write a file called except.log everytime there is an exception?
-exceptionlog = 1
-# Should we send the file to our server as BASE64 exceptiondata?
-sendexception = 1
 # What is our sensorid?
 sensorid = 5
 # How many seconds between sending data?
 sendseconds = 60
 # How many seconds do we try until we abort connecting to our Wifi?
-secondstrywificonnect = 30
+secondstrywificonnect = 45
 # How many blinks does our power meter give per kWh
 impulses_per_kwh = 10000
 # GPIO 5 is Pin D1 on NodeMCU
@@ -72,11 +65,8 @@ def senddata(timer):
         watt = (36 * impulses_per_kwh) / timebetweenpulses
         # Calculate kWh since start
         kwh_since_start = totblinks / impulses_per_kwh
-        # Connect to WiFi -> Get interfaces
+        # Connect to WiFi -> Get interface
         sta_if = network.WLAN(network.STA_IF)
-        ap_if = network.WLAN(network.AP_IF)
-        # Deactivate access point, we're station only
-        ap_if.active(False)
         # Now connect
         connectcount = 0
         if not sta_if.isconnected():
@@ -88,16 +78,7 @@ def senddata(timer):
                 if connectcount > secondstrywificonnect:
                     # We didn't connect after secondstrywificonnect seconds. Return for now
                     return
-        # Send data to the Internet, a Post Request with http - we don't use SSL here!
-        if sendexception and 'except.log' in os.listdir():
-            f = open('except.log', 'r')
-            exceptiondata = f.read()
-            exceptiondata = ubinascii.b2a_base64(exceptiondata)
-            f.close()
-            os.remove('except.log')
-            content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&exceptiondata=' + exceptiondata + '&password=' + passforsending
-        else:
-            content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=' + passforsending
+        content = b'sensorid=' + str(sensorid) + '&power=' + str(watt) + '&kwh_since_start=' + str(kwh_since_start) + '&password=' + passforsending
         addr_info = usocket.getaddrinfo(serveraddress, 80)
         addr = addr_info[0][-1]
         sock = usocket.socket()
@@ -114,36 +95,12 @@ def senddata(timer):
         messA = 0
         messB = 0
         return
-    except Exception as e:
-        if exceptionlog:
-            f = open('except.log', 'a')
-            f.seek(0, 2)
-            f.write('\n***** ' + str(time.ticks_ms()) + ' senddata() ***** ')
-            sys.print_exception(e, f)
-            f.close()
+    except:
         return
 
 # And now we are in main!
 # Any exception will reset us
 try:
-    # Write the reset reason and startup config in except.log
-    if exceptionlog:
-        f = open('except.log', 'a')
-        f.seek(0, 2)
-        f.write('\n***** ' + str(time.ticks_ms()) + ' *****STARTUP***** ')
-        f.write('\nReset reason: ' + str(machine.reset_cause()))
-        f.write('\nsensorid: ' + str(sensorid))
-        f.write('\nsendseconds: ' + str(sendseconds))
-        f.write('\nsecondstrywificonnect: ' + str(secondstrywificonnect))
-        f.write('\npinwithIRsensor: ' + str(pinwithIRsensor))
-        f.write('\nwifiname: ' + str(wifiname))
-        f.write('\nwifipass: ' + str(wifipass))
-        f.write('\nserveraddress: ' + str(serveraddress))
-        f.write('\npassforsending: ' + str(passforsending))
-        f.write('\nimpulses_per_kwh: ' + str(impulses_per_kwh))
-        f.write('\nFrequency is: ' + str(machine.freq()) + ' Hz')
-        f.write('\n\n\n')
-        f.close()
     # Activate a timer which will send our last sample every sendseconds Seconds
     tim = machine.Timer(-1)
     tim.init(period = sendseconds * 1000, mode = machine.Timer.PERIODIC, callback = senddata)
@@ -152,11 +109,11 @@ try:
     # Beware: The ISR can't allocate any memory and should be as short as possible!
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
     irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
-except Exception as e:
-    if exceptionlog:
-        f = open('except.log', 'a')
-        f.seek(0, 2)
-        f.write('\n***** ' + str(time.ticks_ms()) + ' main() ***** ')
-        sys.print_exception(e, f)
-        f.close()
+    # Configure WiFi
+    # Get interfaces
+    sta_if = network.WLAN(network.STA_IF)
+    ap_if = network.WLAN(network.AP_IF)
+    # Deactivate access point, we're station only
+    ap_if.active(False)
+except:
     machine.reset()
