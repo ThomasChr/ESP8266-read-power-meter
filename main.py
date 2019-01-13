@@ -82,15 +82,20 @@ def senddata(timer):
         addr_info = usocket.getaddrinfo(serveraddress, 80)
         addr = addr_info[0][-1]
         sock = usocket.socket()
-        sock.connect(addr)
-        sock.send(b'POST /tempsensor.php HTTP/1.1\r\n')
-        sock.send(b'Host: ' + serveraddress + b'\r\n')
-        sock.send(b'Content-Type: application/x-www-form-urlencoded\r\n')
-        sock.send(b'Content-Length: ' + str(len(content)) + '\r\n')
-        sock.send(b'\r\n')
-        sock.send(content)
-        sock.send(b'\r\n\r\n')
-        sock.close()
+        try:
+            sock.connect(addr)
+            sock.send(b'POST /tempsensor.php HTTP/1.1\r\n')
+            sock.send(b'Host: ' + serveraddress + b'\r\n')
+            sock.send(b'Content-Type: application/x-www-form-urlencoded\r\n')
+            sock.send(b'Content-Length: ' + str(len(content)) + '\r\n')
+            sock.send(b'\r\n')
+            sock.send(content)
+            sock.send(b'\r\n\r\n')
+            sock.close()
+        except:
+            return
+        finally:
+            sock.close()
         # Done
         messA = 0
         messB = 0
