@@ -1,4 +1,4 @@
-Code to read a Power Meter over it's S0-Interface and stream ist on your own Server.
+Code to read a Power Meter over it's S0-Interface and stream it to your own Server.
 It's possible to use Grafana to display the values in a nice manner.
 
 There are the following files:
