@@ -57,6 +57,9 @@ $lastkwhresult = $conn->query($lastkwhselect);
 if ($lastkwhresult->num_rows == 1) {
     $lastkwhrow = $lastkwhresult->fetch_assoc();
     $kwh_since_last_send = $kwh_since_start - $lastkwhrow['kwh_since_start'];
+    if ($kwh_since_last_send < 0) {
+        $kwh_since_last_send = $kwh_since_start;
+    }
 } else {
     $kwh_since_last_send = 0;
 }
