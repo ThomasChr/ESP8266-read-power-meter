@@ -10,3 +10,4 @@ tempsensor.php: The backend PHP-Script to insert the data
 tempsensorcheck.php: A file to check if all Sensors sended data in the last 15 minutes
 
 PS: We're assuming a price of 27.88 Euro-Cent per kWh in the Grafana Querys.
+PPS: The file "main_tempsensor.py" is an ESP8266 Node which uses an BME280 Sensor to get Environmental Data (Temperatur, Humidity, Preasure). It can also use the "tempsensor.php" backend.
