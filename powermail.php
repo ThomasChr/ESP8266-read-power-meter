@@ -53,7 +53,6 @@ while($daysrow = $daysresult->fetch_assoc()) {
 }
 
 /* consumption for the last $fetchmonths months */
-$monthconsumption = "Letzte Monate:\n";
 $monthsresult = $conn->query("select sum(kwh_since_last_send) as sum, DATE_FORMAT(timestamp,'%c/%y') as month from sensorvalues where sensorid = " . $sensorid . " group by 2 order by timestamp DESC LIMIT 0, " . $fetchmonths . ";");
 while($monthsrow = $monthsresult->fetch_assoc()) {
     $monthconsumption .= $monthsrow["month"] . ": " . round($monthsrow["sum"], 2) . " kWh (" . round(($monthsrow["sum"] * $cent_per_kwh / 100), 2) . " EUR)\n";
