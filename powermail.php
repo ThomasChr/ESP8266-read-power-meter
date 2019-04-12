@@ -6,7 +6,7 @@ $dbuser = "envsensors";
 $dbpass = "4";
 $dbname = "envsensors";
 $fetchdays = 30;
-$fetchmonths = 6;
+$fetchmonths = 12;
 $cent_per_kwh = 30.92;
 $sensorid = 5;
 $mailrecp = "none@nowhere.com";
@@ -38,6 +38,13 @@ $thisyearresult = $conn->query("select sum(kwh_since_last_send) as sum from sens
 $thisyearrow = $thisyearresult->fetch_assoc();
 $thisyearkwh = $thisyearrow["sum"];
 
+/* consumption for yesterdays hours */
+$yesterdayhourconsumption = "";
+$yesterdayhoursresult = $conn->query("select hour(timestamp) as hour, sum(kwh_since_last_send) as sum from sensorvalues where sensorid = " . $sensorid . " and date(timestamp) = (curdate() - 1) group by hour(timestamp) order by timestamp ASC;");
+while($yesterdayhoursrow = $yesterdayhoursresult->fetch_assoc()) {
+    $yesterdayhourconsumption .= $yesterdayhoursrow["hour"] . " - " . ($yesterdayhoursrow["hour"] + 1) . " Uhr: " . round($yesterdayhoursrow["sum"], 2) . " kWh (" . round(($yesterdayhoursrow["sum"] * $cent_per_kwh / 100), 2) . " EUR)\n";
+}
+
 /* consumption for the last $fetchdays days */
 $dayconsumption = "";
 $daysresult = $conn->query("select sum(kwh_since_last_send) as sum, date(timestamp) as day, dayname(timestamp) as dayname from sensorvalues where sensorid = " . $sensorid . " group by date(timestamp) order by timestamp DESC LIMIT 0, " . $fetchdays . ";");
@@ -57,8 +64,12 @@ $mailtext = "Es ist der " . date("d.m.Y", $starttime) . ":\n";
 $mailtext .= "Verbrauch gestern: " . round($yesterdaykwh, 2) . " kWh (" . round(($yesterdaykwh * $cent_per_kwh / 100), 2) . " EUR)\n";
 $mailtext .= "Verbrauch diese Woche: " . round($thisweekkwh, 2) . " kWh (" . round(($thisweekkwh * $cent_per_kwh / 100), 2) . " EUR)\n";
 $mailtext .= "Verbrauch dieses Monat: " . round($thismonthkwh, 2) . " kWh (" . round(($thismonthkwh * $cent_per_kwh / 100), 2) . " EUR)\n";
-$mailtext .= "Verbrauch dieses Jahr: " . round($thisyearkwh, 2) . " kWh (" . round(($thisyearkwh * $cent_per_kwh / 100), 2) . " EUR)\n\n";
+$mailtext .= "Verbrauch dieses Jahr: " . round($thisyearkwh, 2) . " kWh (" . round(($thisyearkwh * $cent_per_kwh / 100), 2) . " EUR)\n\n\n";
+$mailtext .= "Verbrauch gestern:\n";
+$mailtext .= $yesterdayhourconsumption . "\n\n";
+$mailtext .= "Verbrauch letzte " . $fetchdays . " Tage:\n";
 $mailtext .= $dayconsumption . "\n\n";
+$mailtext .= "Verbrauch letzte " . $fetchmonths . " Monate:\n";
 $mailtext .= $monthconsumption . "\n\n";
 
 /* send mail */
