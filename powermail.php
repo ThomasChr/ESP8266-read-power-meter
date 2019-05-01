@@ -19,7 +19,7 @@ if ($conn->connect_error) {
 }
 
 /* power yesterday */
-$yesterdayresult = $conn->query("select sum(kwh_since_last_send) as sum from sensorvalues where sensorid = " . $sensorid . " and date(timestamp) = (curdate() - 1);");
+$yesterdayresult = $conn->query("select sum(kwh_since_last_send) as sum from sensorvalues where sensorid = " . $sensorid . " and date(timestamp) = (subdate(curdate(), 1));");
 $yesterdayrow = $yesterdayresult->fetch_assoc();
 $yesterdaykwh = $yesterdayrow["sum"];
 
@@ -40,7 +40,7 @@ $thisyearkwh = $thisyearrow["sum"];
 
 /* consumption for yesterdays hours */
 $yesterdayhourconsumption = "";
-$yesterdayhoursresult = $conn->query("select hour(timestamp) as hour, sum(kwh_since_last_send) as sum from sensorvalues where sensorid = " . $sensorid . " and date(timestamp) = (curdate() - 1) group by hour(timestamp) order by timestamp ASC;");
+$yesterdayhoursresult = $conn->query("select hour(timestamp) as hour, sum(kwh_since_last_send) as sum from sensorvalues where sensorid = " . $sensorid . " and date(timestamp) = (subdate(curdate(), 1)) group by hour(timestamp) order by timestamp ASC;");
 while($yesterdayhoursrow = $yesterdayhoursresult->fetch_assoc()) {
     $yesterdayhourconsumption .= $yesterdayhoursrow["hour"] . " - " . ($yesterdayhoursrow["hour"] + 1) . " Uhr: " . round($yesterdayhoursrow["sum"], 2) . " kWh (" . round(($yesterdayhoursrow["sum"] * $cent_per_kwh / 100), 2) . " EUR)\n";
 }
