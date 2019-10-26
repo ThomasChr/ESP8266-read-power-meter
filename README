@@ -9,6 +9,7 @@ README: This file
 tempsensor.php: The backend PHP-Script to insert the data
 tempsensorcheck.php: A file to check if all Sensors sended data in the last 15 minutes
 powermail.php: A php script which sends you the power consumption of yesterday, the actual week, the actual month, the actual year and the last 30 days. Can be run by a cronjob.
+rep_kwh_since_last_send.php: Runs through the sensorstable for the sensor with the id 5 (my power sensor) and corrects all kwh_since_last_send values by recalculating them from the value kwh_since_start.
 
 PS: We're assuming a price of 30.92 Euro-Cent per kWh in the Grafana Querys and the Mail.
 PPS: The file "main_tempsensor.py" is an ESP8266 Node which uses an BME280 Sensor to get Environmental Data (Temperatur, Humidity, Preasure). It can also use the "tempsensor.php" backend.
