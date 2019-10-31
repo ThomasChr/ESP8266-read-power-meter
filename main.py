@@ -57,10 +57,9 @@ def senddata(timer):
             else:
                 messB = 0
             return
-        if messA > messB:
-            timebetweenpulses = messA - messB
-        else:
-            timebetweenpulses = messB - messA
+        timebetweenpulses = messA - messB
+        if timebetweenpulses < 0:
+            timebetweenpulses = timebetweenpulses * -1
         # Calculate Watts
         watt = (36 * impulses_per_kwh) / timebetweenpulses
         # Calculate kWh since start
