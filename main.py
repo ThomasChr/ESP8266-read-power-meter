@@ -12,8 +12,8 @@ sendseconds = 60
 secondstrywificonnect = 45
 # How many blinks does our power meter give per kWh
 impulses_per_kwh = 10000
-# GPIO 5 is Pin D1 on NodeMCU
-pinwithIRsensor = 5
+# Where is our irSensor connected?
+pinwithIRsensor = 21
 # Wifidata
 wifiname = '1'
 wifipass = '2'
@@ -117,6 +117,6 @@ try:
     # We're using a Pin Change Interrupt, a hard one. To be as quick as possible.
     # Beware: The ISR can't allocate any memory and should be as short as possible!
     irsensor = machine.Pin(pinwithIRsensor, machine.Pin.IN)
-    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived, hard = True)
+    irsensor.irq(trigger = machine.Pin.IRQ_RISING, handler = blinkarrived)
 except:
     machine.reset()
