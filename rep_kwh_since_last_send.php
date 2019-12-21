@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 $kwh_since_start_before = 0;
 $id_before = 0;
 $numUpdated = 0;
-$actrowselect = "select id, kwh_since_start, kwh_since_last_send from sensorvalues where sensorid = " . $sensorid . " order by id asc";
+$actrowselect = "select id, kwh_since_start, kwh_since_last_send from sensorvalues where sensorid = " . $sensorid . " order by `timestamp` asc";
 $actrowresult = $conn->query($actrowselect);
 if ($actrowresult->num_rows > 0) {
     while($actrow = $actrowresult->fetch_assoc()) {
