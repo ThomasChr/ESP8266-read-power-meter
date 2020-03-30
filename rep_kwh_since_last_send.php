@@ -21,7 +21,7 @@ if ($actrowresult->num_rows > 0) {
         $kwh_since_last_send = round($actrow['kwh_since_start'] - $kwh_since_start_before, 5);
         if ($kwh_since_last_send < 0) {
             echo "Possible restart on ID " . $id_before . " (" . $kwh_since_start_before . ") -> " . $actrow['id'] . " (" . $actrow['kwh_since_start'] . "). Please check!\n";
-            if ($kwh_since_last_send < -0.5) {
+            if ($kwh_since_last_send < -0.5 && $actrow['kwh_since_start'] < 5) {
                 echo "-> Setting startvalue\n";
                 $kwh_since_last_send = $actrow['kwh_since_start'];
             } else {
