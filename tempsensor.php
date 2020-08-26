@@ -88,7 +88,7 @@ if ($lastkwhresult->num_rows == 1) {
 }
 
 $stmt = $conn->prepare("INSERT INTO sensorvalues (sensorid, temp, press, hum, power, kwh_since_start, kwh_since_last_send, exceptiondata, co2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("idddddds", $sensorid, $temp, $press, $hum, $power, $kwh_since_start, $kwh_since_last_send, $exceptiondata, $co2);
+$stmt->bind_param("iddddddsd", $sensorid, $temp, $press, $hum, $power, $kwh_since_start, $kwh_since_last_send, $exceptiondata, $co2);
 $stmt->execute();
 
 echo "Done.";
