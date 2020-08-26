@@ -55,6 +55,13 @@ if (!isset($kwh_since_start) || !is_numeric($kwh_since_start)) {
     $kwh_since_start = 0;
 }
 
+if (isset($_POST["co2"])) {
+    $co2 = $_POST["co2"];
+}
+if (!isset($co2) || !is_numeric($co2)) {
+    $co2 = 0;
+}
+
 if (isset($_POST["exceptiondata"])) {
     $exceptiondata = $_POST["exceptiondata"];
 }
@@ -80,8 +87,8 @@ if ($lastkwhresult->num_rows == 1) {
     $kwh_since_last_send = 0;
 }
 
-$stmt = $conn->prepare("INSERT INTO sensorvalues (sensorid, temp, press, hum, power, kwh_since_start, kwh_since_last_send, exceptiondata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("idddddds", $sensorid, $temp, $press, $hum, $power, $kwh_since_start, $kwh_since_last_send, $exceptiondata);
+$stmt = $conn->prepare("INSERT INTO sensorvalues (sensorid, temp, press, hum, power, kwh_since_start, kwh_since_last_send, exceptiondata, co2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("idddddds", $sensorid, $temp, $press, $hum, $power, $kwh_since_start, $kwh_since_last_send, $exceptiondata, $co2);
 $stmt->execute();
 
 echo "Done.";
