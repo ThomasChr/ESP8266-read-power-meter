@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 10. Jan 2019 um 09:02
--- Server-Version: 10.1.37-MariaDB-1~xenial
--- PHP-Version: 7.0.32-0ubuntu0.16.04.1
+-- Erstellungszeit: 26. Aug 2020 um 09:37
+-- Server-Version: 10.1.45-MariaDB-1~xenial
+-- PHP-Version: 7.0.33-0ubuntu0.16.04.15
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -89,7 +89,9 @@ CREATE TABLE `sensorvalues` (
   `power` decimal(10,3) NOT NULL,
   `kwh_since_start` decimal(15,5) NOT NULL,
   `kwh_since_last_send` decimal(10,5) NOT NULL,
-  `exceptiondata` text NOT NULL
+  `exceptiondata` text NOT NULL,
+  `persons` int(11) NOT NULL,
+  `co2` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -118,13 +120,12 @@ ALTER TABLE `sensorvalues`
 -- AUTO_INCREMENT für Tabelle `sensors`
 --
 ALTER TABLE `sensors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 --
 -- AUTO_INCREMENT für Tabelle `sensorvalues`
 --
 ALTER TABLE `sensorvalues`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=310166;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4525167;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
