@@ -26,6 +26,7 @@ MODE = 1
 
 def senddata(timer):
     try:
+        wdt.feed()
         if debug:
             print(str(time.ticks_ms()) + ': Trying to connect')
         # Connect to WiFi -> Get interfaces
@@ -208,6 +209,12 @@ if debug:
     print(str(time.ticks_ms()) + ': OVERSAMPLE_TEMP: ' + str(OVERSAMPLE_TEMP))
     print(str(time.ticks_ms()) + ': OVERSAMPLE_PRES: ' + str(OVERSAMPLE_PRES))
     print(str(time.ticks_ms()) + ': MODE: ' + str(MODE))
+
+# Activate Watchdog
+if debug:
+	print(str(time.ticks_ms()) + ': Activating Watchdog with 120 seconds')
+wdt = machine.WDT(timeout = 120000)
+wdt.feed()
 
 # Activate a send timer
 if debug:
