@@ -48,8 +48,8 @@ def senddata(timer):
                     # We didn't connect after secondstrywificonnect seconds. Let's sleep
                     if debug:
                         print(str(time.ticks_ms()) + ': Connect failed after ' + str(
-                            connectcount) + ' seconds sleep. Going to deepsleep')
-                    machine.deepsleep()
+                            connectcount) + ' seconds sleep. Resetting')
+                    machine.reset()
 
         # Startup I2C
         if debug:
