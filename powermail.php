@@ -7,7 +7,9 @@ $dbpass = "4";
 $dbname = "envsensors";
 $fetchdays = 30;
 $fetchmonths = 12;
-$cent_per_kwh = 30.92;
+$CENT_PER_KWH = 38.54;
+$EURO_PER_MONTH = 10.50;
+$EURO_PER_MONTH_PREPAYMENT = 85;
 $sensorid = 5;
 $mailrecp = "none@nowhere.com";
 $starttime = mktime(0, 0, 0, date("m", time()), date("d", time()), date("Y", time()));
@@ -42,29 +44,32 @@ $thisyearkwh = $thisyearrow["sum"];
 $yesterdayhourconsumption = "";
 $yesterdayhoursresult = $conn->query("select hour(timestamp) as hour, sum(kwh_since_last_send) as sum from sensorvalues where sensorid = " . $sensorid . " and date(timestamp) = (subdate(curdate(), 1)) group by hour(timestamp) order by timestamp ASC;");
 while($yesterdayhoursrow = $yesterdayhoursresult->fetch_assoc()) {
-    $yesterdayhourconsumption .= $yesterdayhoursrow["hour"] . " - " . ($yesterdayhoursrow["hour"] + 1) . " Uhr: " . round($yesterdayhoursrow["sum"], 2) . " kWh (" . round(($yesterdayhoursrow["sum"] * $cent_per_kwh / 100), 2) . " EUR)\n";
+    $yesterdayhourconsumption .= $yesterdayhoursrow["hour"] . " - " . ($yesterdayhoursrow["hour"] + 1) . " Uhr: " . round($yesterdayhoursrow["sum"], 2) . " kWh (" . round(($yesterdayhoursrow["sum"] * $CENT_PER_KWH / 100), 2) . " EUR)\n";
 }
 
 /* consumption for the last $fetchdays days */
 $dayconsumption = "";
 $daysresult = $conn->query("select sum(kwh_since_last_send) as sum, date(timestamp) as day, dayname(timestamp) as dayname from sensorvalues where sensorid = " . $sensorid . " group by date(timestamp) order by timestamp DESC LIMIT 0, " . $fetchdays . ";");
 while($daysrow = $daysresult->fetch_assoc()) {
-    $dayconsumption .= $daysrow["dayname"] . ", " . $daysrow["day"] . ": " . round($daysrow["sum"], 2) . " kWh (" . round(($daysrow["sum"] * $cent_per_kwh / 100), 2) . " EUR)\n";
+    $dayconsumption .= $daysrow["dayname"] . ", " . $daysrow["day"] . ": " . round($daysrow["sum"], 2) . " kWh (" . round(($daysrow["sum"] * $CENT_PER_KWH / 100), 2) . " EUR)\n";
 }
 
 /* consumption for the last $fetchmonths months */
 $monthconsumption = "";
 $monthsresult = $conn->query("select sum(kwh_since_last_send) as sum, DATE_FORMAT(timestamp,'%c/%y') as month from sensorvalues where sensorid = " . $sensorid . " group by 2 order by timestamp DESC LIMIT 0, " . $fetchmonths . ";");
 while($monthsrow = $monthsresult->fetch_assoc()) {
-    $monthconsumption .= $monthsrow["month"] . ": " . round($monthsrow["sum"], 2) . " kWh (" . round(($monthsrow["sum"] * $cent_per_kwh / 100), 2) . " EUR)\n";
+    $monthconsumption .= $monthsrow["month"] . ": " . round($monthsrow["sum"], 2) . " kWh (" . round(($monthsrow["sum"] * $CENT_PER_KWH / 100 + $EURO_PER_MONTH), 2) . " EUR)\n";
 }
 
 /* build the mailtext */
 $mailtext = "Es ist der " . date("d.m.Y", $starttime) . ":\n";
-$mailtext .= "Verbrauch gestern: " . round($yesterdaykwh, 2) . " kWh (" . round(($yesterdaykwh * $cent_per_kwh / 100), 2) . " EUR)\n";
-$mailtext .= "Verbrauch diese Woche: " . round($thisweekkwh, 2) . " kWh (" . round(($thisweekkwh * $cent_per_kwh / 100), 2) . " EUR)\n";
-$mailtext .= "Verbrauch dieses Monat: " . round($thismonthkwh, 2) . " kWh (" . round(($thismonthkwh * $cent_per_kwh / 100), 2) . " EUR)\n";
-$mailtext .= "Verbrauch dieses Jahr: " . round($thisyearkwh, 2) . " kWh (" . round(($thisyearkwh * $cent_per_kwh / 100), 2) . " EUR)\n\n\n";
+$mailtext .= "Verbrauch gestern: " . round($yesterdaykwh, 2) . " kWh (" . round(($yesterdaykwh * $CENT_PER_KWH / 100), 2) . " EUR)\n";
+$mailtext .= "Verbrauch diese Woche: " . round($thisweekkwh, 2) . " kWh (" . round(($thisweekkwh * $CENT_PER_KWH / 100), 2) . " EUR)\n";
+$mailtext .= "Verbrauch dieses Monat: " . round($thismonthkwh, 2) . " kWh (" . round(($thismonthkwh * $CENT_PER_KWH / 100 + $EURO_PER_MONTH), 2) . " EUR)\n";
+$mailtext .= "Verbrauch dieses Jahr: " . round($thisyearkwh, 2) . " kWh (" . round(($thisyearkwh * $CENT_PER_KWH / 100 + ($EURO_PER_MONTH * date('m'))), 2) . " EUR)\n\n";
+$mailtext .= "Preis pro kWh: " . $CENT_PER_KWH . " Cent\n";
+$mailtext .= "Grudngebuehr pro Monat: " . $EURO_PER_MONTH . " Euro\n";
+$mailtext .= "Abschlag pro Monat: " . $EURO_PER_MONTH_PREPAYMENT . " Euro\n\n";
 $mailtext .= "Verbrauch gestern:\n";
 $mailtext .= $yesterdayhourconsumption . "\n\n";
 $mailtext .= "Verbrauch letzte " . $fetchdays . " Tage:\n";
