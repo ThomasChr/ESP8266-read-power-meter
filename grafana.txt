@@ -14,7 +14,7 @@ Power Metric B:
 >>>>>
 SELECT
   UNIX_TIMESTAMP(timestamp) as time_sec,
-  (power / 1000) * 50 as value,
+  (power / 1000) * 29.33 as value,
   'cost in cent/hour' as metric
 FROM sensorvalues
 WHERE $__timeFilter(timestamp)
@@ -39,7 +39,7 @@ Consumption per Month Metric B:
 >>>>>
 select
   timestamp as time,
-  (sum(kwh_since_last_send) * 0.50) as value,
+  (sum(kwh_since_last_send) * 0.30) as value,
   'cost in eur' as metric
 from sensorvalues
 where timestamp >= $__timeFrom()
